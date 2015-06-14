@@ -280,7 +280,7 @@ class ServiceWindow extends Frame
 						System.out.println("destinationUser.s" + destinationUser.s);
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					
 					e.printStackTrace();
 				}
 			}
