@@ -222,9 +222,12 @@ class ServiceWindow extends Frame
 	class ServiceForClientsThread extends Thread {
 		Socket threadClient = null;
 		DataInputStream inputData = null;
+		DataOutputStream outputData = null;
+		OutputStream os = null;
 		UserInformation thisUser = null;
 		UserInformation destinationUser = null;
-		String buffer = new String();
+		String receiveBuffer = new String();
+		String sendBuffer = new String();
 		
 		ServiceForClientsThread(Socket c)
 		{
@@ -252,6 +255,44 @@ class ServiceWindow extends Frame
 			return id;	
 		}
 		
+		private String getMessgae(String s)
+		{
+			int index = 0;
+			String message;
+			index = s.indexOf("&&");
+			message = s.substring(index + 2, s.length());
+			return message;	
+		}
+		
+		private String receive() throws IOException
+		{
+			return inputData.readUTF();	
+		}
+		
+		private void send() throws IOException
+		{
+			os = destinationUser.s.getOutputStream();
+			outputData = new DataOutputStream(os);
+			if (sendBuffer != null)
+				outputData.writeUTF(sendBuffer);
+		}
+		
+		private void decodeMessage(String s)
+		{
+			destinationUser.id = getDestinationId(s);
+			sendBuffer = getMessgae(s);
+			System.out.println("sendBuffer = " + sendBuffer);
+			if (-1 != destinationUser.id)
+			{
+				System.out.println("destinationUser.id" + destinationUser.id);
+				searchUserFromId(destinationUser.id, destinationUser);
+			}
+			if (destinationUser.s != null)
+			{
+				System.out.println("destinationUser.s" + destinationUser.s);
+			}
+		}
+		
 		public void run() {
 			
 			try {
@@ -267,18 +308,9 @@ class ServiceWindow extends Frame
 			while(true)
 			{
 				try {
-					buffer = inputData.readUTF();
-					serviceContext.append(buffer + "\r\n");
-					destinationUser.id = getDestinationId(buffer);
-					if (-1 != destinationUser.id)
-					{
-						System.out.println("destinationUser.id" + destinationUser.id);
-						searchUserFromId(destinationUser.id, destinationUser);
-					}
-					if (destinationUser.s != null)
-					{
-						System.out.println("destinationUser.s" + destinationUser.s);
-					}
+					receiveBuffer = receive();
+					decodeMessage(receiveBuffer);
+					send();
 				} catch (IOException e) {
 					
 					e.printStackTrace();
